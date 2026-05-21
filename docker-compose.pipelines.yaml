@@ -1,0 +1,27 @@
+services:
+  pipelines:
+    image: ghcr.io/open-webui/pipelines:main
+    container_name: pipelines
+    volumes:
+      - ./pipelines:/app/pipelines
+    ports:
+      - "9099:9099"
+    environment:
+      # 在线强模型配置
+      - STRONG_API_URL=${STRONG_API_URL:-https://api.siliconflow.cn/v1}
+      - STRONG_API_KEY=${STRONG_API_KEY}
+      - STRONG_MODEL=${STRONG_MODEL:-deepseek-ai/DeepSeek-V3}
+      # 本地模型配置
+      - OLLAMA_URL=http://ollama:11434
+      - LOCAL_MODEL=${LOCAL_MODEL:-qwen3-coder-next}
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  open-webui:
+    environment:
+      # Pipelines 作为额外的 OpenAI 兼容端点接入 open-webui
+      - OPENAI_API_BASE_URL=http://pipelines:9099
+      - OPENAI_API_KEY=pipelines-key
+    depends_on:
+      - pipelines
